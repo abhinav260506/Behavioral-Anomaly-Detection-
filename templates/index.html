@@ -1,0 +1,529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Behavioral Anomaly Detection | SOC Analyst Center</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="brand">
+                <div class="shield-icon">🛡️</div>
+                <div>
+                    <h2>Aegis AI</h2>
+                    <span class="brand-sub">Behavioral Anomaly Engine</span>
+                </div>
+            </div>
+
+            <nav class="nav-menu">
+                <button class="nav-item active" onclick="switchTab('dashboard')">
+                    <span class="icon">📊</span> Overview & Queue
+                </button>
+                <button class="nav-item" onclick="switchTab('scores')">
+                    <span class="icon">🏆</span> Model Performance Scores
+                </button>
+                <button class="nav-item" onclick="switchTab('simulator')">
+                    <span class="icon">⚡</span> Attack Simulator
+                </button>
+                <button class="nav-item" onclick="switchTab('evaluator')">
+                    <span class="icon">🔍</span> Event Evaluator
+                </button>
+                <button class="nav-item" onclick="switchTab('taxonomy')">
+                    <span class="icon">🎯</span> Attack Taxonomy
+                </button>
+            </nav>
+
+            <div class="sidebar-footer">
+                <div class="status-indicator">
+                    <span class="pulse-dot"></span>
+                    <span>Real-Time Ingestion Active</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header Metrics Strip -->
+            <header class="top-header">
+                <div class="header-title">
+                    <h1>SOC Analyst Operations Center</h1>
+                    <p>Real-Time AI/ML Sequential Telemetry Monitoring & Risk Attribution</p>
+                </div>
+                <div class="quick-actions">
+                    <button class="btn btn-primary" onclick="refreshDashboard()">
+                        <span>🔄</span> Refresh Data
+                    </button>
+                </div>
+            </header>
+
+            <!-- Metrics Summary Cards -->
+            <section class="metrics-grid" style="grid-template-columns: repeat(6, 1fr);">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Total Logs</span>
+                        <span class="metric-icon">📥</span>
+                    </div>
+                    <div class="metric-value" id="val-total-logs">28,257</div>
+                    <div class="metric-sub">Analyzed events</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">End-to-End Accuracy</span>
+                        <span class="metric-icon">🏆</span>
+                    </div>
+                    <div class="metric-value text-success" id="val-accuracy">95.36%</div>
+                    <div class="metric-sub">Held-out test set</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Stage-1 ROC-AUC</span>
+                        <span class="metric-icon">📈</span>
+                    </div>
+                    <div class="metric-value text-accent" id="val-roc-auc">0.9734</div>
+                    <div class="metric-sub">Near perfect separation</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">False Positive Rate</span>
+                        <span class="metric-icon">🟢</span>
+                    </div>
+                    <div class="metric-value text-success" id="val-fpr">2.45%</div>
+                    <div class="metric-sub">Target &le; 10% (Passed)</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Macro F1-Score</span>
+                        <span class="metric-icon">🎯</span>
+                    </div>
+                    <div class="metric-value text-warning" id="val-macro-f1">67.91%</div>
+                    <div class="metric-sub">All 8 categories</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <span class="metric-label">Entity Overlap</span>
+                        <span class="metric-icon">🔒</span>
+                    </div>
+                    <div class="metric-value text-success" id="val-entity-overlap">0</div>
+                    <div class="metric-sub">Zero data leakage</div>
+                </div>
+            </section>
+
+            <!-- Main Tab: Dashboard -->
+            <div id="tab-dashboard" class="tab-content active">
+                <div class="dashboard-grid">
+                    <!-- Ranked Alert Queue -->
+                    <div class="card queue-card">
+                        <div class="card-header">
+                            <div>
+                                <h3>Ranked Alert Queue</h3>
+                                <span class="card-subtitle">Prioritized by AI Risk Score (0 - 100)</span>
+                            </div>
+                            <div class="queue-filters">
+                                <select id="filter-risk" onchange="filterAlerts()">
+                                    <option value="all">All Risk Levels</option>
+                                    <option value="high">High Risk (≥ 75)</option>
+                                    <option value="medium">Medium Risk (50-74)</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="table-container">
+                            <table class="alert-table">
+                                <thead>
+                                    <tr>
+                                        <th>Alert ID</th>
+                                        <th>Timestamp</th>
+                                        <th>Entity ID & Type</th>
+                                        <th>Predicted Category</th>
+                                        <th>Risk Score</th>
+                                        <th>Ground Truth</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="alert-table-body">
+                                    <!-- Dynamic content -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Side Panel: Entity Inspector & Quick Explanation -->
+                    <div class="card detail-card" id="detail-panel">
+                        <div class="card-header">
+                            <h3>Alert Explainability & Attribution</h3>
+                        </div>
+                        <div class="card-body" id="detail-body">
+                            <div class="empty-state">
+                                <span>🔍</span>
+                                <p>Select an alert from the queue to inspect AI feature attribution & entity timeline</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Model Performance Scores -->
+            <div id="tab-scores" class="tab-content">
+                <div class="card" style="margin-bottom: 20px;">
+                    <div class="card-header">
+                        <div>
+                            <h3 style="font-size: 16px; font-weight: 700; color: var(--accent-cyan);">🏆 Frozen Model Evaluation & Benchmark Scores</h3>
+                            <span class="card-subtitle">Empirical evaluation metrics on untouched held-out test split (26 test entities, 4,481 logs, zero data leakage)</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Key Metrics Summary Grid -->
+                        <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px;">
+                            <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(6,182,212,0.3); border-radius: 8px; padding: 14px;">
+                                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">STAGE-1 ROC-AUC</span>
+                                <span style="font-size: 24px; font-weight: 700; color: var(--accent-cyan); font-family: var(--font-mono); display: block; margin-top: 4px;">0.9734</span>
+                                <span style="font-size: 10px; color: var(--accent-green);">Near Perfect Class Separation</span>
+                            </div>
+                            <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(16,185,129,0.3); border-radius: 8px; padding: 14px;">
+                                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">STAGE-1 FPR</span>
+                                <span style="font-size: 24px; font-weight: 700; color: var(--accent-green); font-family: var(--font-mono); display: block; margin-top: 4px;">2.45%</span>
+                                <span style="font-size: 10px; color: var(--accent-green);">Target &le; 10% (Passed)</span>
+                            </div>
+                            <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(59,130,246,0.3); border-radius: 8px; padding: 14px;">
+                                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">END-TO-END ACCURACY</span>
+                                <span style="font-size: 24px; font-weight: 700; color: var(--accent-blue); font-family: var(--font-mono); display: block; margin-top: 4px;">95.36%</span>
+                                <span style="font-size: 10px; color: var(--text-muted);">4,273 / 4,481 Correct Test Logs</span>
+                            </div>
+                            <div style="background: rgba(15,23,42,0.6); border: 1px solid rgba(245,158,11,0.3); border-radius: 8px; padding: 14px;">
+                                <span style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; font-weight: 700; display: block;">MACRO F1-SCORE</span>
+                                <span style="font-size: 24px; font-weight: 700; color: var(--accent-amber); font-family: var(--font-mono); display: block; margin-top: 4px;">67.91%</span>
+                                <span style="font-size: 10px; color: var(--text-muted);">Unweighted 8-Class Average</span>
+                            </div>
+                        </div>
+
+                        <!-- Per-Class Metrics Table -->
+                        <div style="margin-bottom: 24px;">
+                            <h4 style="font-size: 14px; font-weight: 700; color: var(--accent-amber); margin-bottom: 10px;">🎯 Per-Class Performance Breakdown Table (All 8 Categories):</h4>
+                            <div class="table-container">
+                                <table class="alert-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Category Name</th>
+                                            <th>Support</th>
+                                            <th>Precision</th>
+                                            <th>Recall</th>
+                                            <th>F1-Score</th>
+                                            <th>Status / Performance</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="scores-class-table-body">
+                                        <tr>
+                                            <td><strong style="color:var(--accent-green);">normal</strong></td>
+                                            <td>4,122</td>
+                                            <td>97.43%</td>
+                                            <td>97.55%</td>
+                                            <td><strong style="color:var(--accent-green);">97.49%</strong></td>
+                                            <td><span class="risk-pill badge-green">Excellent Baseline</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong style="color:var(--accent-cyan);">lateral_movement</strong></td>
+                                            <td>96</td>
+                                            <td>89.72%</td>
+                                            <td>100.00%</td>
+                                            <td><strong style="color:var(--accent-cyan);">94.58%</strong></td>
+                                            <td><span class="risk-pill badge-green">100% Intrusion Catch Rate</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong style="color:var(--accent-blue);">brute_force</strong></td>
+                                            <td>45</td>
+                                            <td>100.00%</td>
+                                            <td>82.22%</td>
+                                            <td><strong style="color:var(--accent-blue);">90.24%</strong></td>
+                                            <td><span class="risk-pill badge-green">100% Precision</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong style="color:var(--accent-purple);">credential_stuffing</strong></td>
+                                            <td>61</td>
+                                            <td>100.00%</td>
+                                            <td>78.69%</td>
+                                            <td><strong style="color:var(--accent-purple);">88.07%</strong></td>
+                                            <td><span class="risk-pill badge-green">100% Precision</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong style="color:var(--accent-amber);">device_spoofing</strong></td>
+                                            <td>21</td>
+                                            <td>58.33%</td>
+                                            <td>66.67%</td>
+                                            <td><strong style="color:var(--accent-amber);">62.22%</strong></td>
+                                            <td><span class="risk-pill badge-amber">Robust Catch Rate</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong style="color:#f472b6;">insider_drift</strong></td>
+                                            <td>70</td>
+                                            <td>43.33%</td>
+                                            <td>55.71%</td>
+                                            <td><strong style="color:#f472b6;">48.75%</strong></td>
+                                            <td><span class="risk-pill badge-amber">Drift Scope Detected</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong style="color:#a7f3d0;">low_and_slow_exfiltration</strong></td>
+                                            <td>42</td>
+                                            <td>34.21%</td>
+                                            <td>30.95%</td>
+                                            <td><strong>32.50%</strong></td>
+                                            <td><span class="risk-pill badge-amber">Off-Hours Volume Catch</span></td>
+                                        </tr>
+                                        <tr>
+                                            <td><strong style="color:#fbbf24;">impossible_travel</strong></td>
+                                            <td>24</td>
+                                            <td>50.00%</td>
+                                            <td>20.83%</td>
+                                            <td><strong>29.41%</strong></td>
+                                            <td><span class="risk-pill badge-amber">Velocity Anomaly Flagged</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 8x8 Confusion Matrix -->
+                        <div>
+                            <h4 style="font-size: 14px; font-weight: 700; color: var(--accent-cyan); margin-bottom: 10px;">📊 8x8 Confusion Matrix (True Label vs. Predicted Category):</h4>
+                            <div style="overflow-x: auto; background: #0b0f19; padding: 16px; border-radius: 8px; border: 1px solid var(--border-color);">
+                                <table style="width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 11px; text-align: center;">
+                                    <thead>
+                                        <tr style="border-bottom: 2px solid var(--border-color); color: var(--accent-cyan);">
+                                            <th style="padding: 8px; text-align: left;">True \ Pred</th>
+                                            <th style="padding: 8px;">normal</th>
+                                            <th style="padding: 8px;">brute_</th>
+                                            <th style="padding: 8px;">creden_</th>
+                                            <th style="padding: 8px;">latera_</th>
+                                            <th style="padding: 8px;">low_an_</th>
+                                            <th style="padding: 8px;">device_</th>
+                                            <th style="padding: 8px;">imposs_</th>
+                                            <th style="padding: 8px;">inside_</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: var(--accent-green);">normal</td>
+                                            <td style="padding: 8px; background: rgba(16,185,129,0.2); font-weight: 700; color: var(--accent-green);">4021</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px;">10</td>
+                                            <td style="padding: 8px;">25</td>
+                                            <td style="padding: 8px;">10</td>
+                                            <td style="padding: 8px;">5</td>
+                                            <td style="padding: 8px;">51</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: var(--accent-blue);">brute_force</td>
+                                            <td style="padding: 8px;">8</td>
+                                            <td style="padding: 8px; background: rgba(59,130,246,0.2); font-weight: 700; color: var(--accent-blue);">37</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: var(--accent-purple);">credential_stuffing</td>
+                                            <td style="padding: 8px;">13</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; background: rgba(139,92,246,0.2); font-weight: 700; color: var(--accent-purple);">48</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: var(--accent-cyan);">lateral_movement</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; background: rgba(6,182,212,0.2); font-weight: 700; color: var(--accent-cyan);">96</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: #a7f3d0;">low_and_slow_exfiltration</td>
+                                            <td style="padding: 8px;">28</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px;">1</td>
+                                            <td style="padding: 8px; background: rgba(16,185,129,0.2); font-weight: 700; color: #a7f3d0;">13</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: var(--accent-amber);">device_spoofing</td>
+                                            <td style="padding: 8px;">7</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; background: rgba(245,158,11,0.2); font-weight: 700; color: var(--accent-amber);">14</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                        </tr>
+                                        <tr style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: #fbbf24;">impossible_travel</td>
+                                            <td style="padding: 8px;">19</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; background: rgba(251,191,36,0.2); font-weight: 700; color: #fbbf24;">5</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 8px; text-align: left; font-weight: 700; color: #f472b6;">insider_drift</td>
+                                            <td style="padding: 8px;">31</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; color: var(--text-muted);">0</td>
+                                            <td style="padding: 8px; background: rgba(244,114,182,0.2); font-weight: 700; color: #f472b6;">39</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Simulator -->
+            <div id="tab-simulator" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Interactive Attack Injector & Concept Drift Simulator</h3>
+                    </div>
+                    <div class="card-body">
+                        <p>Inject real-time synthetic attack sequences into the behavioral engine to test detection & classification performance.</p>
+                        <div class="simulator-controls">
+                            <div class="form-group">
+                                <label>Target Entity ID (Optional)</label>
+                                <input type="text" id="sim-entity" placeholder="e.g. user_003 (leave blank for random)">
+                            </div>
+                            <div class="attack-buttons-grid">
+                                <button class="btn btn-attack" onclick="injectAttack('brute_force')">
+                                    💥 Brute Force Attack
+                                </button>
+                                <button class="btn btn-attack" onclick="injectAttack('impossible_travel')">
+                                    ✈️ Impossible Travel
+                                </button>
+                                <button class="btn btn-attack" onclick="injectAttack('credential_stuffing')">
+                                    🔑 Credential Stuffing
+                                </button>
+                                <button class="btn btn-attack" onclick="injectAttack('lateral_movement')">
+                                    🔀 Lateral Movement
+                                </button>
+                                <button class="btn btn-attack" onclick="injectAttack('device_spoofing')">
+                                    💻 Device Spoofing
+                                </button>
+                                <button class="btn btn-attack" onclick="injectAttack('low_and_slow_exfiltration')">
+                                    🐢 Low-and-Slow Exfil
+                                </button>
+                                <button class="btn btn-attack" onclick="injectAttack('insider_drift')">
+                                    🔄 Insider Drift (Edge Case)
+                                </button>
+                            </div>
+                        </div>
+                        <div id="sim-result" class="sim-output"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Single Event Evaluator -->
+            <div id="tab-evaluator" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <div>
+                            <h3>Single Access Event Tester & AI Predictor</h3>
+                            <span class="card-subtitle">Paste any JSON access log event to evaluate AI threat score, attack category prediction, and feature attributions</span>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        <!-- Preset Templates Bar -->
+                        <div style="margin-bottom: 16px;">
+                            <label style="font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 8px;">Load Preset Sample Event Template:</label>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: rgba(59, 130, 246, 0.2);" onclick="loadPreset('brute_force')">⚡ Brute Force Sample</button>
+                                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: rgba(239, 68, 68, 0.2);" onclick="loadPreset('impossible_travel')">✈️ Impossible Travel Sample</button>
+                                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: rgba(245, 158, 11, 0.2);" onclick="loadPreset('device_spoofing')">💻 Device Spoofing Sample</button>
+                                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: rgba(139, 92, 246, 0.2);" onclick="loadPreset('lateral_movement')">🔀 Lateral Movement Sample</button>
+                                <button class="btn btn-primary" style="padding: 6px 12px; font-size: 12px; background: rgba(16, 185, 129, 0.2);" onclick="loadPreset('normal')">✅ Normal Baseline Sample</button>
+                            </div>
+                        </div>
+
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+                            <!-- Input JSON Column -->
+                            <div>
+                                <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">Raw Access Log Event JSON Input:</label>
+                                <textarea id="eval-json-input" rows="18" style="width: 100%; background: #0b0f19; border: 1px solid var(--border-color); border-radius: 8px; color: #a5f3fc; font-family: var(--font-mono); font-size: 12px; padding: 12px;" placeholder="Paste AccessLogEvent JSON here..."></textarea>
+                                <button class="btn btn-primary" style="width: 100%; margin-top: 12px; padding: 12px; font-size: 14px; font-weight: 700; background: var(--accent-blue);" onclick="evaluateSingleEvent()">
+                                    ⚡ Evaluate Event & Predict Attack
+                                </button>
+                            </div>
+
+                            <!-- Output Evaluation Column -->
+                            <div>
+                                <label style="font-size: 13px; font-weight: 600; display: block; margin-bottom: 8px;">AI Prediction & XAI Explainability Output:</label>
+                                <div id="eval-result-panel" style="background: #0b0f19; border: 1px solid var(--border-color); border-radius: 8px; padding: 16px; min-height: 400px;">
+                                    <div class="empty-state">
+                                        <span>🔍</span>
+                                        <p>Paste an event JSON or click a preset template above, then click 'Evaluate Event & Predict Attack' to view predictions.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab: Attack Taxonomy -->
+            <div id="tab-taxonomy" class="tab-content">
+                <div class="card">
+                    <div class="card-header">
+                        <h3>Attack Taxonomy Distribution</h3>
+                    </div>
+                    <div class="card-body">
+                        <div id="taxonomy-breakdown" class="taxonomy-grid">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Entity History Modal -->
+    <div class="modal-overlay" id="entity-modal">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h3 id="modal-entity-title">Entity Behavior History</h3>
+                <button class="btn-close" onclick="closeEntityModal()">✕</button>
+            </div>
+            <div class="modal-body" id="modal-entity-body">
+                <!-- Dynamic entity timeline -->
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/dashboard.js"></script>
+</body>
+</html>
